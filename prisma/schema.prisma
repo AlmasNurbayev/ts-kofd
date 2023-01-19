@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model organization {
+  id Int            @id @default(autoincrement())
+  BIN String        @unique
+  name_org String
+  kasses kassa[] //virtual
+  transactions transaction[] //virtual
+}
+
+model kassa {
+  id Int            @id @default(autoincrement()) 
+  snumber String    @unique
+  znumber String
+  knumber String    @unique
+  name_kassa String
+  organization organization @relation(fields: [id_organization], references: [id]) //virtual
+  id_organization Int //foreign key
+  transactions transaction[] //virtual
+
+  @@index(fields: [id])
+}
+
+model transaction {
+  id String  @id         
+  onlineFiscalNumber String?
+  offlineFiscalNumber String?
+  systemDate DateTime? @db.Timestamptz
+  operationDate DateTime? @db.Timestamptz 
+  type_operation Int
+  subType Int?
+  sum_operation Decimal?
+  availableSum Decimal?
+  paymentTypes String?
+  shift Int
+  uploadDate DateTime @updatedAt @db.Timestamptz
+  organization organization @relation(fields: [id_organization], references: [id]) //virtual
+  id_organization Int //foreign key
+  kassa kassa @relation(fields: [id_kassa], references: [id]) //virtual
+  id_kassa Int //foreign key
+  @@index(fields: [shift, id_kassa])
+}
+
+model telegram_users {
+  id String @unique
+  username String
+}
+
+model user {
+  id Int @id @default(autoincrement())
+  email String @unique
+  name String?
+  password String
+  salt String?
+}

@@ -1,0 +1,31 @@
+{
+  "name": "ts-kofd",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "index": "nodemon index.ts",
+    "app": "nodemon src/app.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlmasNurbayev/ts-kofd.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlmasNurbayev/ts-kofd/issues"
+  },
+  "homepage": "https://github.com/AlmasNurbayev/ts-kofd#readme",
+  "dependencies": {
+    "@fastify/swagger": "^8.3.0",
+    "@prisma/client": "^4.9.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/node": "^18.11.18",
+    "bcrypt": "^5.1.0",
+    "dotenv": "^16.0.3",
+    "fastify": "^4.11.0",
+    "prisma": "^4.9.0"
+  }
+}
