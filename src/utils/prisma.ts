@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
+import { logger } from "./log-files";
 
-const prisma = new PrismaClient();
+const prismaI = new PrismaClient();
+logger.info('utils - prisma.ts - create prisma client');
 
-export default prisma;
+export default prismaI;
 

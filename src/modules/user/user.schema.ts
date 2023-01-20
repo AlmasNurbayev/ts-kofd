@@ -1,24 +1,53 @@
+import { type } from "os";
 
 const createUserBody = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['name', 'email', 'password'],
+  type: "object",
+  required: ["name", "email", "password"],
   properties: {
-    //id: { type: 'integer' },
-    email: { type: 'string' },
-    name: { type: 'string' },
-    password: { type: 'string' }
+    email: { type: "string" },
+    name: { type: "string" },
+    password: { type: "string" }
   }
 };
 
-//title: "user json for cipo kofd bot", - вынести в заголовок всех схем
-//version: '1.0',
+export type createUserSchemaT = {email: string; name: string; password: string};
 
 const createUserSchema = {
   schema: {
+    description: "post user",
+    body: createUserBody,
     response: {
       201: {
-        body: createUserBody,
+        description: "successfull response",
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          name: { type: "string" }
+        }
+      },
+      400: {
+        description: "error response",
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        }
+      },
+      409: {
+        description: "data already",
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        }
+      },
+      500: {
+        description: "unknown error",
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        }
       }
     }
   }
