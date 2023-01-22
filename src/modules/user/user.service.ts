@@ -4,41 +4,75 @@ import { Prisma, user } from '@prisma/client'
 import bcrypt from "bcrypt";
 import { FastifyRequest } from "fastify";
 import { logger } from "../../utils/log-files";
+//import { getUsersSchemaT } from "./user.schema";
 //const bcrypt = require('bcrypt');
 
 export async function createUser(body: Prisma.userCreateInput) {
-        console.log('service');
-        logger.info('user-service-createUser - starting'); 
-        const { email, name, password} = body;
-        //console.log(email, name, password);
+    console.log('service');
+    logger.info('user-service-createUser - starting');
+    const { email, name, password } = body;
+    //console.log(email, name, password);
 
     try {
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(String(password), salt);
         try {
-             const data2 = {
-                  data: {email, name, salt, password: hash}};
-                //console.log(data2);
+            const data2 = {
+                data: { email, name, salt, password: hash }
+            };
+            //console.log(data2);
 
             const user = await prismaI.user.create(data2);
-            logger.info('user-service-createUser - done'); 
-            user['salt'] = '';
-            user['password'] = '';
+            logger.info('user-service-createUser - done');
             return user;
-        } 
+        }
         catch (err) {
-            logger.error('user-service-createUser ' + String(err)); 
+            logger.error('user-service-createUser ' + String(err));
             throw err;
         }
     } catch (err) {
-        logger.error('user-service-createUser ' + String(err)); 
+        logger.error('user-service-createUser ' + String(err));
         throw err;
     }
-}      
-                
-            
-            
-        
+}
+
+export async function getUsers() {
+    console.log('service');
+    logger.info('user-service-getUsers - starting');
+    try {
+        const users = await prismaI.user.findMany();
+        logger.info('user-service-getUser - done');
+        //console.log(users)
+        return users;
+    }
+    catch (err) {
+        logger.error('user-service-getUsers ' + String(err));
+        throw err;
+    }
+}
+
+export async function getUser(body: Prisma.userWhereUniqueInput) {
+    console.log('service');
+    logger.info('user-service-getUser - starting');
+    const { email } = body;
+    //console.log(email, id);
+    
+    try {
+        if (email) {
+            const user = await prismaI.user.findUnique({
+                where: { email: email },
+            });
+            logger.info('user-service-getUser - done');
+            return user;
+        }
+
+    }
+    catch (err) {
+        logger.error('user-service-getUser ' + String(err));
+        throw err;
+    }
+}
+
 
 
 

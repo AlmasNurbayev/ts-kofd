@@ -21,6 +21,7 @@ async function main() {
     //server.register(kassaRoutes, {prefix: 'api/kassa'});
     swaggerInit();
     server.register(userRoutes, {prefix: 'api/user'});
+    //server.register(userRoutes, {prefix: 'api/user'});
 
     try {
         await server.listen({port})
