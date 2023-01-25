@@ -55,7 +55,7 @@ export async function getUser(body: Prisma.userWhereUniqueInput) {
     console.log('service');
     logger.info('user-service-getUser - starting');
     const { email } = body;
-    //console.log(email, id);
+    //console.log(JSON.stringify(body));
     
     try {
         if (email) {

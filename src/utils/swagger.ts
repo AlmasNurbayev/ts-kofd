@@ -8,7 +8,7 @@ export async function swaggerInit() {
     server.register(require('@fastify/swagger'), {
         swagger: {
           info: {
-            title: 'swagger',
+            title: 'TS-KOFD swagger page',
             description: 'api for project ts-kofd',
             version: '0.1.0'
           },

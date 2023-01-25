@@ -63,4 +63,5 @@ model user {
   name String?
   password String
   salt String?
+  role String?
 }

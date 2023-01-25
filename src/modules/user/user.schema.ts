@@ -1,9 +1,11 @@
 import { type } from "os";
+import { server } from "../../app";
 
 export const createUserBody = {
   type: "object",
   required: ["name", "email", "password"],
   properties: {
+    
     email: { type: "string" },
     name: { type: "string" },
     password: { type: "string" }
@@ -13,7 +15,9 @@ export const createUserBody = {
 export type createUserSchemaT = {email: string; name: string; password: string};
 
 export const createUserSchema = {
-  schema: {
+  schema: 
+    {
+        
     description: "post user",
     body: createUserBody,
     response: {
@@ -50,26 +54,35 @@ export const createUserSchema = {
         }
       }
     }
-  }
+  }, $id: "createUserSchema"
 }
 
 
 export const getUsersSchema = {
+//  preHandler: getUsersPrehandler,
   schema: {
-    description: "get all users, return array of objects",
-    //body: getUsersBody,
-    response: {
+     description: "get all users, return array of objects",
+     components:{
+     securitySchemes: {
+       bearerAuth: {  
+         type: "http",
+         scheme: "bearer",
+         bearerFormat: "JWT"  }}},
+     response: {
+      
       200: {
-        description: "success response",
+        description: "need JWT token",
         type: "array",
+        security: {"bearerAuth": []},
         items:  {
           type: "object",
           properties: {
           id: { type: "integer" },
           email: { type: "string" },
           name: { type: "string" },
-          password: { type: "string" },
-          salt: { type: "string" }
+          role: { type: "string" }
+          //password: { type: "string" },
+          //salt: { type: "string" }
         }
         } 
       },
@@ -82,7 +95,7 @@ export const getUsersSchema = {
         }
       }
     }
-  }
+  },    $id: "getUsersSchema"    
 }
 
 export type getUsersSchemaT = [{id: number, email: string; name: string}];
@@ -90,11 +103,12 @@ export type getUsersSchemaT = [{id: number, email: string; name: string}];
 //export { createUserSchema, createUserBody };
 
 export const getUserBody = {
-  type: "object",
-  required: ["email"],
-  properties: {
-    email: { type: "string" },
-  }
+  email: {type: "string", description: "email as string without curly brackets"} //короткий вариант параметра
+  // type: "object",
+  // required: ["email"],
+  // properties: {
+  //   email: { type: "string", description: "email as string without curly brackets"},
+  // }
 };
 
 // export const getUserBody = {
@@ -105,33 +119,28 @@ export const getUserBody = {
 // };
 
 
-export type getUserSchemaT = {email: string; name: string; password: string; id: number};
+export type getUserSchemaT = {email: string; name: string; password: string; id: number; role: string};
 
 export const getUserSchema = {
   schema: {
     description: "get once user",
-    params: getUserBody,
+    querystring: {
+      email: { type: 'string', description: "like /api/user/get/?email=xxx@yyy.com"}},    
+    //params: getUserBody,
     response: {
       200: {
         description: "successfull response",
         type: "object",
         properties: {
-          password: { type: "string" },
+          //password: { type: "string" },
           email: { type: "string" },
           name: { type: "string" },
-          id: { type: "integer" }
+          id: { type: "integer" },
+          role: { type: "string" },
         }
       },
-      400: {
-        description: "error response",
-        type: "object",
-        properties: {
-          error: { type: "string" },
-          message: { type: "string" },
-        }
-      },
-      409: {
-        description: "data already",
+      404: {
+        description: "bad request",
         type: "object",
         properties: {
           error: { type: "string" },
@@ -147,12 +156,68 @@ export const getUserSchema = {
         }
       }
     }
-  }
+  }, $id: "getUserSchema"
+}
+
+export const loginUserBody = {
+  type: "object",
+required: ["email", "password"],
+properties: {
+  email: { type: "string" },
+  password: { type: "string" }
+}}
+
+export type loginUserSchemaT = {email: string, password: string};
+
+export const loginUserSchema = {
+  schema: {
+    description: "login user",
+    body: loginUserBody,
+    response: {
+      200: {
+        description: "successfull auth",
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          accessToken: { type: "string" },
+          //name: { type: "string" }
+        }
+      },
+      400: {
+        description: "not valid auth data",
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        }
+      },
+      401: {
+        description: "incorrect email / password",
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        }
+      },
+      500: {
+        description: "unknown error",
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        }
+      }
+    }
+  }, $id: "loginUserSchema"
 }
 
 
-
-
+export const userShemas = [
+  createUserSchema, 
+  getUsersSchema,
+  getUserSchema,
+  loginUserSchema
+]
 
 
 
