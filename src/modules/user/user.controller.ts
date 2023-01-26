@@ -1,12 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { logger } from "../../utils/log-files";
 import { createUserBody, loginUserBody } from "./user.schema"; // схемы объектов на вход
-import { createUserSchemaT, getUserSchemaT, loginUserSchemaT } from "./user.schema"; // типы объектов на вход
-import { createUser, getUsers, getUser } from "./user.service";
+import { createUserSchemaT, getUserSchemaT, loginUserSchemaT, putUserSchemaT } from "./user.schema"; // типы объектов на вход
+import { createUser, getUsers, getUser, putUser, deleteUser } from "./user.service";
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 import { server } from "../../../src/app";
-import { userPreHandlerAuth } from "./user.handlers";
+
 
 
 export async function createUserController(
@@ -25,16 +25,16 @@ export async function createUserController(
 
     if (!request.validateInput(body3, createUserBody)) {
         logger.error('user - controller' + ' 400 - not valid data');
-        return reply.code(400).send({ error: 'bad request', message: 'not valid data in JSON: ' + JSON.stringify(body) });
+        reply.code(400).send({ error: 'bad request', message: 'not valid data in JSON: ' + JSON.stringify(body) });
     }
     if (!(body3.email).includes('@')) {
         logger.error('user - controller' + ' 400 - email is not correct');
-        return reply.code(400).send({ error: 'bad request', message: 'email is not correct: ' + String(body3.email) });
+        reply.code(400).send({ error: 'bad request', message: 'email is not correct: ' + String(body3.email) });
     }
     try {
         const user = await createUser(body3);
         logger.info('user - controller' + ' 201 ' + JSON.stringify(user).slice(0, 300));
-        return reply.code(201).send(JSON.stringify(user));
+        reply.code(201).send(JSON.stringify(user));
 
     } catch (err) {
         //console.log(err); // проверить тип ошибки
@@ -42,7 +42,7 @@ export async function createUserController(
             logger.error('user - controller' + ' 409 - email address already in use');
             return reply.code(409).send({ error: 'conflict', message: 'email address already in use: ' + String(body3.email) });
         }
-        return reply.code(500).send({ error: 'Internal Server Error', message: 'unknown error, please reply action' });
+        reply.code(500).send({ error: 'Internal Server Error', message: 'unknown error, please reply action' });
     }
 }
 
@@ -51,30 +51,15 @@ export async function getUsersController(
     reply: FastifyReply) {
     console.log('controller');
     logger.info('user - controller - GET users request ' + JSON.stringify(request.headers).slice(0, 300));
-    //const body as getUsersSchemaT;
-    
-        
 
     try {
-        
-        
-        // let res = await userPreHandlerAuth(request, reply);
-        // console.log(res);
-        
-        // if (res === false) {
-        //     return reply.code(401).send({ error: 'unautorized', message: 'unautorized' });   
-        // };
         const body = await getUsers();
-        //const stringify = fastJsonStringify()
-        //console.log(body);
-        //return reply.serializeInput(body, getUsersSchema, '200', 'application/json') // '{"name": "Jone", "age": 18}'
         logger.info('user-service-getUsers' + ' 200 ' + JSON.stringify(body).slice(0, 300));
-        //return reply.code(200).header('Content-Type', 'application/json; charset=utf-8').send(JSON.stringify(body));
-        return body;
+        reply.code(200).send(body);
 
     } catch (err) {
         logger.error('user-service-getUsers ' + String(err));
-        throw err;
+        reply.code(500).send({ error: 'internal server error', message: 'unknown error' });
     }
 }
 
@@ -83,21 +68,21 @@ export async function getUserController(
     reply: FastifyReply) {
     console.log('controller');
     logger.info('user - controller - GET user request ' + JSON.stringify(request.headers).slice(0, 300));
-    //const body as getUsersSchemaT;
     console.log('request', JSON.stringify(request.query));
 
     const { email } = request.query as getUserSchemaT;
     try {
         const body = await getUser({ email: email });
-        if (body != null) {
+        if (body) {
             logger.info('user-service-getUser' + ' 200 ' + JSON.stringify(body).slice(0, 300));
-            return body;
+            reply.code(200).send(body);
         } else {
-            return reply.code(404).send({ error: 'bad request', message: 'not found user by email ' + email });
+            reply.code(404).send({ error: 'bad request', message: 'not found user by email ' + email });
+            logger.error('user-service-getUser ' + 'not found user by email ' + email);
         }
     } catch (err) {
         logger.error('user-service-getUser ' + String(err));
-        throw err;
+        reply.code(500).send({ error: 'internal server error', message: 'unknown error' });
     }
 }
 
@@ -110,34 +95,86 @@ export async function loginUserController(
 
     if (!request.validateInput(body, loginUserBody)) {
         logger.error('user - controller' + ' 400 - not valid data');
-        return reply.code(400).send({ error: 'bad request', message: 'not valid data in JSON: ' + JSON.stringify(body) });
+        reply.code(400).send({ error: 'bad request', message: 'not valid data in JSON: ' + JSON.stringify(body) });
     }
     if (!(body.email).includes('@')) {
         logger.error('user - controller' + ' 400 - email is not correct');
-        return reply.code(400).send({ error: 'bad request', message: 'email is not correct: ' + String(body.email) });
+        reply.code(400).send({ error: 'bad request', message: 'email is not correct: ' + String(body.email) });
     }
 
     try {
         // find user by email
-        const user = await getUser(body);
+        const user = await getUser(body) as loginUserSchemaT;
         if (!user) {
-            return reply.code(401).send({ error: 'Unauthorized', message: 'incorrect email / password' });
+            reply.code(401).send({ error: 'Unauthorized', message: 'incorrect email / password' });
+            logger.error('user-service-loginUser ' + '401 incorrect email / password');
         }
 
         // verify password
         const correctPassword = await bcrypt.compare(body.password, user.password); // сравниваем переданный пароль и хеш в базе
         if (correctPassword) {
             // generate JWT
-            const accessToken = server.jwt.sign({ id: user.id, email: user.email }, { expiresIn: process.env.JWT_EXP_MS}); // генерируем токен и передаем клиенту
-            //console.log(accessToken);
-            return reply.code(200).send({ email: user.email, accessToken: accessToken });
+            const accessToken = server.jwt.sign({ id: user.id, email: user.email }, { expiresIn: process.env.JWT_EXP_MS }); // генерируем токен и передаем клиенту
+            reply.code(200).send({ email: user.email, accessToken: accessToken });
         } else {
-            return reply.code(401).send({ error: 'Unauthorized', message: 'incorrect email / password' }); // отказ если хеш не подходит
+            reply.code(401).send({ error: 'Unauthorized', message: 'incorrect email / password' }); // отказ если хеш не подходит
+            logger.error('user-service-loginUser ' + '401 incorrect email / password');
         }
-        // respond
     }
     catch (err) {
-
+        logger.error('user-service-loginUser ' + String(err));
+        reply.code(500).send({ error: 'internal server error', message: 'unknown error' });
     }
 }
 
+export async function putUserController(
+    request: FastifyRequest,
+    reply: FastifyReply) {
+
+    logger.info('user.controller - login POST headers ' + JSON.stringify(request.headers).slice(0, 300));
+    logger.info('user.controller - login POST body ' + JSON.stringify(request.body).slice(0, 300));
+
+    const body = request.body as putUserSchemaT;
+
+    if (!body.email) {
+        logger.error('user-service-putUsers ' + String('не передан email'));
+        reply.code(400).send({ error: 'Bad Request', message: 'not contains email' });
+    }
+
+    try {
+        const updUser = await putUser(body);
+        if (updUser) {
+            reply.code(200).send(updUser);
+        } else {
+            logger.error('user-service-putUsers ' + String(body.email));
+            reply.code(400).send({ error: 'Bad Request', message: 'not found' });
+        }
+    }
+    catch (err) {
+        logger.error('user-service-putUsers ' + String(err));
+        reply.code(500).send({ error: 'internal server error', message: 'unknown error' });
+    }
+}
+
+export async function deleteUserController(
+    request: FastifyRequest,
+    reply: FastifyReply) {
+    console.log('controller');
+    logger.info('user - controller - DELETE user request ' + JSON.stringify(request.headers).slice(0, 300));
+    console.log('request', JSON.stringify(request.query));
+
+    const { email } = request.query as getUserSchemaT;
+    try {
+         const body = await deleteUser({ email: email });
+         if (body) {
+             logger.info('user-service-deleteUser' + ' 200 ' + JSON.stringify(body).slice(0, 300));
+             reply.code(200).send(body);
+         } else {
+             reply.code(404).send({ error: 'bad request', message: 'not found user by email ' + email });
+             logger.error('user-service-deleteUser ' + 'not found user by email ' + email);
+         }
+    } catch (err) {
+        logger.error('user-service-deleteUser ' + String(err));
+        reply.code(500).send({ error: 'internal server error', message: 'unknown error' });
+    }
+}

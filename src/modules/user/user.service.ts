@@ -4,7 +4,7 @@ import { Prisma, user } from '@prisma/client'
 import bcrypt from "bcrypt";
 import { FastifyRequest } from "fastify";
 import { logger } from "../../utils/log-files";
-//import { getUsersSchemaT } from "./user.schema";
+import { putUserSchemaT } from "./user.schema";
 //const bcrypt = require('bcrypt');
 
 export async function createUser(body: Prisma.userCreateInput) {
@@ -47,14 +47,14 @@ export async function getUsers() {
     }
     catch (err) {
         logger.error('user-service-getUsers ' + String(err));
-        throw err;
+        return false;
     }
 }
 
 export async function getUser(body: Prisma.userWhereUniqueInput) {
     console.log('service');
-    logger.info('user-service-getUser - starting');
     const { email } = body;
+    logger.info('user-service-getUser - starting ' + JSON.stringify(body));
     //console.log(JSON.stringify(body));
     
     try {
@@ -69,11 +69,71 @@ export async function getUser(body: Prisma.userWhereUniqueInput) {
     }
     catch (err) {
         logger.error('user-service-getUser ' + String(err));
-        throw err;
+        return false;
     }
 }
 
+export async function putUser(body: Prisma.userUpdateInput) {
+    console.log('service');
+    logger.info('user-service-putUser - starting');
+    const { email, password, name } = body;
+    //console.log(JSON.stringify(body));
+
+    try {
+        
+        let oldUser = await prismaI.user.findUnique({
+            where: {email: email as string},
+        });
+        if (oldUser != null) {
+            console.log(oldUser);
+            let updBody = oldUser;
+
+            if (password != oldUser.password) {
+                const salt = await bcrypt.genSalt(10);
+                const hash = await bcrypt.hash(String(password), salt);
+                updBody.password = hash; 
+                updBody.salt = salt;    
+            }        
+            if (name != oldUser.name) {
+                updBody.name = name as string;
+            }
+            const updUser = await prismaI.user.update({
+                 where: { email: email as string },
+                 data: updBody
+             });
+            logger.info('user-service-putUser - done: ' + JSON.stringify(updBody));
+            return updUser; // return object with modified user
+
+        } else {
+            logger.error('user-service-putUser ' + String('не найден пользователь с данным e-mail'));
+            return false; // retyrn false if user not found
+        }
 
 
+    }
+    catch (err) {
+        logger.error('user-service-putUser ' + String(err));
+        return false; // retyrn false if user not found
+    }
+}
+
+export async function deleteUser(body: Prisma.userWhereUniqueInput) {
+    const { email } = body;
+    logger.info('user-service-deleteUser - starting ' + JSON.stringify(body));
+    
+    try {
+        if (email) {
+            const user = await prismaI.user.delete({
+                where: { email: email },
+            });
+            logger.info('user-service-deleteUser - done');
+            return user;
+        }
+    }
+    catch (err) {
+        logger.error('user-service-deleteUser ' + String(err));
+        return false;
+    }
+}
 
 

@@ -1,11 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { url } from "inspector";
 import { logger } from "../../utils/log-files";
-import { createUserController, getUsersController, getUserController, loginUserController} from "./user.controller";
-import { createUserSchema, getUsersSchema, loginUserSchema } from "./user.schema";
+import { createUserController, getUsersController, getUserController, loginUserController, putUserController, deleteUserController} from "./user.controller";
+import { createUserSchema, deleteUserSchema, getUsersSchema, loginUserSchema, putUserSchema } from "./user.schema";
 import { getUserSchema, getUserBody } from "./user.schema";
-import {server} from "../../app";
-import {userPreHandlerAuth} from './user.handlers';
+
 
 async function userRoutes(server: FastifyInstance ) {
   console.log('start route');
@@ -19,7 +17,7 @@ async function userRoutes(server: FastifyInstance ) {
   try {
     server.get('/all', 
     {
-      preHandler: [server.authenticate],
+      preHandler: [server.authenticateAdmin],
       schema: getUsersSchema.schema
     }, 
     getUsersController);
@@ -30,7 +28,7 @@ async function userRoutes(server: FastifyInstance ) {
   try {
     server.get('/get/', 
     {
-      preHandler: [server.authenticate],
+      preHandler: [server.authenticateAdmin],
       schema: getUserSchema.schema
     }, getUserController);
   } catch (err) {
@@ -43,7 +41,26 @@ async function userRoutes(server: FastifyInstance ) {
     logger.error('user.routes - login ' + err);
     throw err;
   };
-
+  try {
+    server.put('/', 
+    {
+      preHandler: [server.authenticateWithBodyEmail],
+      schema: putUserSchema.schema
+    }, putUserController);
+  } catch (err) {
+    logger.error('user.routes - put ' + err);
+    throw err;
+  };
+  try {
+    server.delete('/', 
+    {
+      preHandler: [server.authenticateAdmin],
+      schema: deleteUserSchema.schema
+    }, deleteUserController);
+  } catch (err) {
+    logger.error('user.routes - delete once ' + err);
+    throw err;
+  };
 
 
   console.log('end route');
