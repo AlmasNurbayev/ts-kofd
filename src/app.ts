@@ -1,7 +1,7 @@
 console.log('Hello2');
 
 import fastify from "fastify";
-//dotenv.config();
+
 //import kassaRoutes from "./modules/kassa/kassa.routes";
 import fjwt from "@fastify/jwt";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -14,7 +14,9 @@ import {kassaRoutes} from "./modules/kassa/kassa.routes";
 import { kassaShemas } from "./modules/kassa/kassa.schema";
 import { orgShemas } from "./modules/organization/organization.schema";
 import { orgRoutes } from "./modules/organization/organization.routes";
+import dotenv from 'dotenv';
 
+dotenv.config();
 export const port = Number(process.env.PORT_EXPRESS);
 export const server = fastify({ logger: true });
 
