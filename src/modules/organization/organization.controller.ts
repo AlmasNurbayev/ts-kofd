@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { logger } from "../../utils/log-files";
-import { getOrg, postOrg } from "../organization/organization.service";
+import { getOrg, postOrg, putOrg } from "../organization/organization.service";
 import { postOrgBody, postOrgSchemaT, putOrgSchemaT } from "./organization.schema";
 
 export async function postOrgHandler(
@@ -79,5 +79,23 @@ export async function putOrgHandler(
     logger.info('Org - controller - PUT request ' + JSON.stringify(request.headers).slice(0, 300));
     logger.info('Org - controller - PUT body ' + JSON.stringify(request.body).slice(0, 300));
 
-    
+    if (!body.BIN) {
+        logger.error('org-service-putOrg ' + String('не передан BIN'));
+        reply.code(400).send({ error: 'Bad Request', message: 'not contains BIN' });
+    }
+
+    try {
+        const updOrg = await putOrg(body);
+        if (updOrg === false) {
+            logger.error('org-service-putOrg ' + String(body.BIN));
+            reply.code(400).send({ error: 'Bad Request', message: 'not found' });
+        } else {
+            reply.code(200).send(updOrg);
+        }
+    }
+    catch (err) {
+        logger.error('org-service-putOrg ' + String(err));
+        reply.code(500).send({ error: 'internal server error', message: 'unknown error' });
+    }
 }  
+

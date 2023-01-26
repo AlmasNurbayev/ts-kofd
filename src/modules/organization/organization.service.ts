@@ -38,3 +38,40 @@ export async function getOrg() {
         return false;
     }
 }
+
+export async function putOrg(body: Prisma.organizationUpdateInput) {
+    console.log('service');
+    logger.info('org-service-putOrg - starting');
+    const { BIN, name_org} = body;
+    //console.log(JSON.stringify(body));
+
+    try {
+        
+        let oldOrg = await prismaI.organization.findUnique({
+            where: {BIN: BIN as string},
+        });
+        if (oldOrg != null) {
+            console.log(oldOrg);
+            let updBody = oldOrg;
+
+            if (name_org != oldOrg.name_org) {
+                updBody.name_org = name_org as string;
+            }
+            const updOrg = await prismaI.organization.update({
+                 where: { BIN: BIN as string },
+                 data: updBody
+             });
+            logger.info('org-service-putOrg - done: ' + JSON.stringify(updBody));
+            return updOrg; // return object with modified user
+
+        } else {
+            logger.error('org-service-putOrg ' + String('not found organization with BIN ') + BIN);
+            return false; // retyrn false if org not found
+        }
+    }
+    catch (err) {
+        logger.error('org-service-putOrg ' + String(err));
+        return false; // retyrn false if user not found
+    }
+
+}

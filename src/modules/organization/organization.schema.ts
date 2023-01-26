@@ -110,7 +110,7 @@ export const putOrgBody = {
       body: putOrgBody,
       response: {
         200: {
-          description: "need JWT auth",
+          description: "need JWT auth, may change only name_org",
           type: "object",
           properties: {
             BIN: { type: "string" },
