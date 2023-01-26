@@ -33,6 +33,11 @@ export async function createUserController(
     }
     try {
         const user = await createUser(body3);
+        if (user === false) {
+            reply.code(500).send({ error: 'Internal Server Error', message: 'unknown error, please reply action' });
+            logger.error('user-service-createUser, not user return');
+        }
+
         logger.info('user - controller' + ' 201 ' + JSON.stringify(user).slice(0, 300));
         reply.code(201).send(JSON.stringify(user));
 
@@ -54,6 +59,11 @@ export async function getUsersController(
 
     try {
         const body = await getUsers();
+        if (body === false) {
+            reply.code(500).send({ error: 'Internal Server Error', message: 'unknown error, please reply action' });
+            logger.error('user-service-getUsers, not users return');
+        }
+
         logger.info('user-service-getUsers' + ' 200 ' + JSON.stringify(body).slice(0, 300));
         reply.code(200).send(body);
 

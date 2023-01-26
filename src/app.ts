@@ -12,6 +12,8 @@ import { swaggerInit } from "./utils/swagger";
 import { getUser } from "./modules/user/user.service";
 import {kassaRoutes} from "./modules/kassa/kassa.routes";
 import { kassaShemas } from "./modules/kassa/kassa.schema";
+import { orgShemas } from "./modules/organization/organization.schema";
+import { orgRoutes } from "./modules/organization/organization.routes";
 
 export const port = Number(process.env.PORT_EXPRESS);
 export const server = fastify({ logger: true });
@@ -33,6 +35,9 @@ async function main() {
   kassaShemas.forEach((schema) => {
     server.addSchema(schema);
   });
+  orgShemas.forEach((schema) => {
+    server.addSchema(schema);
+  });
 
   // регистрация JWT
   server.register(fjwt, {
@@ -43,6 +48,7 @@ async function main() {
   // регистрация роутов по модулям
   server.register(userRoutes, { prefix: 'api/user' });
   server.register(kassaRoutes, { prefix: 'api/kassa' });
+  server.register(orgRoutes, { prefix: 'api/org' });
 
   try {
     await server.listen({ port })

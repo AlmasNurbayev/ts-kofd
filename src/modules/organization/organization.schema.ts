@@ -53,17 +53,9 @@ export const postOrgSchema = {
                 }
             }
         }
-    }, $id: "postKassaSchema"
+    }, $id: "postOrgSchema"
 }
 
-// export const getKassaBody = {
-//     type: "object",
-//     required: ["email", "password"],
-//     properties: {
-//         email: { type: "string" },
-//         password: { type: "string" }
-//     }
-// }
 
 export const getOrgSchema = {
     schema: {
@@ -80,7 +72,7 @@ export const getOrgSchema = {
         response: {
             200: {
                 description: "need JWT admin token",
-                type: "object",
+                type: "array",
                 properties: {
                     name_org: { type: "string" },
                     BIN: { type: "string" },
@@ -97,10 +89,66 @@ export const getOrgSchema = {
                 }
             }
         }
-    }, $id: "getKassaSchema"
+    }, $id: "getOrgSchema"
 }
+
+export const putOrgBody = {
+    type: "object",
+    required: ["BIN"],
+    properties: {
+      name_org: { type: "string" },
+      BIN: { type: "string" },
+    }
+  };
+  
+  export type putOrgSchemaT = { BIN: string, name_org: string, id?: number }
+  
+  export const putOrgSchema = {
+    schema: 
+      {
+      description: "put org",
+      body: putOrgBody,
+      response: {
+        200: {
+          description: "need JWT auth",
+          type: "object",
+          properties: {
+            BIN: { type: "string" },
+            name_org: { type: "string" },
+            id: { typt: "integer"},
+          }
+        },
+        400: {
+          description: "error response",
+          type: "object",
+          properties: {
+            error: { type: "string" },
+            message: { type: "string" },
+          }
+        },
+        401: {
+          description: "forbidden",
+          type: "object",
+          properties: {
+            error: { type: "string" },
+            message: { type: "string" },
+          }
+        },
+        500: {
+          description: "unknown error",
+          type: "object",
+          properties: {
+            error: { type: "string" },
+            message: { type: "string" },
+          }
+        }
+      }
+    }, $id: "putOrgSchema"
+  }
+
 
 export const orgShemas = [
     postOrgSchema,
-    getOrgSchema
+    getOrgSchema,
+    putOrgSchema
 ]

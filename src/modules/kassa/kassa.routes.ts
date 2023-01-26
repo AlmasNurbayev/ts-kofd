@@ -11,7 +11,7 @@ export async function kassaRoutes(server: FastifyInstance) {
       }, 
     postKassaHandler);
 
-    server.get('/all', 
+    server.get('/', 
     {
         preHandler: [server.authenticateAdmin],
         schema: getKassaSchema.schema

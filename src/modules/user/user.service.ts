@@ -28,11 +28,11 @@ export async function createUser(body: Prisma.userCreateInput) {
         }
         catch (err) {
             logger.error('user-service-createUser ' + String(err));
-            throw err;
+            return false;
         }
     } catch (err) {
         logger.error('user-service-createUser ' + String(err));
-        throw err;
+        return false;
     }
 }
 
