@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getKassaHandler, postKassaHandler } from "./kassa.controller";
-import { getKassaSchema, postKassaSchema } from "./kassa.schema";
+import { getKassaHandler, postKassaHandler, putKassaHandler } from "./kassa.controller";
+import { getKassaSchema, postKassaSchema, putKassaSchema } from "./kassa.schema";
 
 export async function kassaRoutes(server: FastifyInstance) {
     
@@ -17,6 +17,15 @@ export async function kassaRoutes(server: FastifyInstance) {
         schema: getKassaSchema.schema
       }, 
     getKassaHandler);    
+
+    server.put('/', 
+    {
+        preHandler: [server.authenticateAdmin],
+        schema: putKassaSchema.schema
+      }, 
+    putKassaHandler);  
+
+
 }
 
 

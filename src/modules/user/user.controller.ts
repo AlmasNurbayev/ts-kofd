@@ -141,8 +141,8 @@ export async function putUserController(
     request: FastifyRequest,
     reply: FastifyReply) {
 
-    logger.info('user.controller - login POST headers ' + JSON.stringify(request.headers).slice(0, 300));
-    logger.info('user.controller - login POST body ' + JSON.stringify(request.body).slice(0, 300));
+    logger.info('user.controller - PUT headers ' + JSON.stringify(request.headers).slice(0, 300));
+    logger.info('user.controller - PUT body ' + JSON.stringify(request.body).slice(0, 300));
 
     const body = request.body as putUserSchemaT;
 

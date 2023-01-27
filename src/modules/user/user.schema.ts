@@ -5,19 +5,19 @@ export const createUserBody = {
   type: "object",
   required: ["name", "email", "password"],
   properties: {
-    
+
     email: { type: "string" },
     name: { type: "string" },
     password: { type: "string" }
   }
 };
 
-export type createUserSchemaT = {email: string; name: string; password: string};
+export type createUserSchemaT = { email: string; name: string; password: string };
 
 export const createUserSchema = {
-  schema: 
-    {
-        
+  schema:
+  {
+    tags: ['user'],
     description: "post user",
     body: createUserBody,
     response: {
@@ -59,32 +59,36 @@ export const createUserSchema = {
 
 
 export const getUsersSchema = {
-//  preHandler: getUsersPrehandler,
+  //  preHandler: getUsersPrehandler,
   schema: {
-     description: "get all users, return array of objects",
-     components:{
-     securitySchemes: {
-       bearerAuth: {  
-         type: "http",
-         scheme: "bearer",
-         bearerFormat: "JWT"  }}},
-     response: {
-      
+    tags: ['user'],
+    description: "get all users, return array of objects",
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      }
+    },
+    response: {
+
       200: {
         description: "need JWT token",
         type: "array",
-        security: {"bearerAuth": []},
-        items:  {
+        security: { "bearerAuth": [] },
+        items: {
           type: "object",
           properties: {
-          id: { type: "integer" },
-          email: { type: "string" },
-          name: { type: "string" },
-          role: { type: "string" }
-          //password: { type: "string" },
-          //salt: { type: "string" }
+            id: { type: "integer" },
+            email: { type: "string" },
+            name: { type: "string" },
+            role: { type: "string" }
+            //password: { type: "string" },
+            //salt: { type: "string" }
+          }
         }
-        } 
       },
       500: {
         description: "unknown error",
@@ -95,24 +99,26 @@ export const getUsersSchema = {
         }
       }
     }
-  },    $id: "getUsersSchema"    
+  }, $id: "getUsersSchema"
 }
 
-export type getUsersSchemaT = [{id: number, email: string; name: string}];
+export type getUsersSchemaT = [{ id: number, email: string; name: string }];
 
 //export { createUserSchema, createUserBody };
 
 export const getUserBody = {
-  email: {type: "string", description: "email as string without curly brackets"} //короткий вариант параметра
+  email: { type: "string", description: "email as string without curly brackets" } //короткий вариант параметра
 };
 
-export type getUserSchemaT = {email: string; name: string; password: string; id: number; role: string};
+export type getUserSchemaT = { email: string; name: string; password: string; id: number; role: string };
 
 export const getUserSchema = {
   schema: {
+    tags: ['user'],
     description: "get once user",
     querystring: {
-      email: { type: 'string', description: "like /api/user/get/?email=xxx@yyy.com"}},    
+      email: { type: 'string', description: "like /api/user/get/?email=xxx@yyy.com" }
+    },
     //params: getUserBody,
     response: {
       200: {
@@ -148,16 +154,18 @@ export const getUserSchema = {
 
 export const loginUserBody = {
   type: "object",
-required: ["email", "password"],
-properties: {
-  email: { type: "string" },
-  password: { type: "string" }
-}}
+  required: ["email", "password"],
+  properties: {
+    email: { type: "string" },
+    password: { type: "string" }
+  }
+}
 
-export type loginUserSchemaT = {email: string, password: string, id: number};
+export type loginUserSchemaT = { email: string, password: string, id: number };
 
 export const loginUserSchema = {
   schema: {
+    tags: ['user'],
     description: "login user",
     body: loginUserBody,
     response: {
@@ -204,17 +212,18 @@ export const putUserBody = {
   type: "object",
   required: ["email", "password"],
   properties: {
-    email: { type: "string"},
+    email: { type: "string" },
     name: { type: "string" },
-    password: { type: "string"}
+    password: { type: "string" }
   }
 };
 
-export type putUserSchemaT = {email: string, name: string, password: string, id: number, role: string, salt: string};
+export type putUserSchemaT = { email: string, name: string, password: string, id: number, role: string, salt: string };
 
 export const putUserSchema = {
-  schema: 
-    {
+  schema:
+  {
+    tags: ['user'],
     description: "post user",
     body: putUserBody,
     response: {
@@ -224,8 +233,8 @@ export const putUserSchema = {
         properties: {
           email: { type: "string" },
           name: { type: "string" },
-          id: { typt: "integer"},
-          role: { typt: "string"},
+          id: { typt: "integer" },
+          role: { typt: "string" },
         }
       },
       400: {
@@ -256,13 +265,15 @@ export const putUserSchema = {
   }, $id: "putUserSchema"
 }
 
-export type deleteUserSchemaT = {email: string; name: string; password: string; id: number; role: string};
+export type deleteUserSchemaT = { email: string; name: string; password: string; id: number; role: string };
 
 export const deleteUserSchema = {
   schema: {
+    tags: ['user'],
     description: "delete once user",
     querystring: {
-      email: { type: 'string', description: "like /api/user/?email=xxx@yyy.com"}},    
+      email: { type: 'string', description: "like /api/user/?email=xxx@yyy.com" }
+    },
     //params: getUserBody,
     response: {
       200: {
@@ -299,7 +310,7 @@ export const deleteUserSchema = {
 
 
 export const userShemas = [
-  createUserSchema, 
+  createUserSchema,
   getUsersSchema,
   getUserSchema,
   loginUserSchema,

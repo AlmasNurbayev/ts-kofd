@@ -15,7 +15,12 @@ export async function swaggerInit() {
           host: 'localhost:' + String(port),
           schemes: ['http'],
           consumes: ['application/json'],
-          produces: ['application/json']
+          produces: ['application/json'],
+          tags: [
+            { name: 'user', description: 'User related end-points' },
+            { name: 'kassa', description: 'Kassa related end-points' },
+            { name: 'organization', description: 'Organization related end-points' },
+          ],          
         },
         exposeRoute: true,
         routePrefix: '/docs'
@@ -23,7 +28,7 @@ export async function swaggerInit() {
       server.register(require('@fastify/swagger-ui'), {
         routePrefix: '/docs',
         uiConfig: {
-            docExpansion: 'full',
+            docExpansion: 'list',
             deepLinking: false
         },
         // uiHooks: {

@@ -16,6 +16,7 @@ export type postOrgSchemaT = { BIN: string, name_org: string, id?: number }
 
 export const postOrgSchema = {
     schema: {
+      tags: ['organization'],
         description: "post Organization",
         body: postOrgBody,
         response: {
@@ -59,6 +60,7 @@ export const postOrgSchema = {
 
 export const getOrgSchema = {
     schema: {
+      tags: ['organization'],
         description: "get all organizations",
         components: {
             securitySchemes: {
@@ -106,11 +108,12 @@ export const putOrgBody = {
   export const putOrgSchema = {
     schema: 
       {
+      tags: ['organization'],
       description: "put org",
       body: putOrgBody,
       response: {
         200: {
-          description: "need JWT auth, may change only name_org",
+          description: "need JWT auth and BIN, may change only name_org",
           type: "object",
           properties: {
             BIN: { type: "string" },
