@@ -132,7 +132,7 @@ export const putKassaSchema = {
     schema: {
         tags: ['kassa'],
         description: "put kassa",
-        type: "object",
+        body: {type: "object",
         required: ["id"],
         properties: {
             snumber: { type: "string" },
@@ -141,7 +141,7 @@ export const putKassaSchema = {
             name_kassa: { type: "string" },
             id_organization: { type: "integer" },
             id: { type: "integer" }
-        },
+        }},
          response: {
             200: {
                 description: "need JWT admin token and id",

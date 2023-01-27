@@ -75,10 +75,13 @@ export const getOrgSchema = {
             200: {
                 description: "need JWT admin token",
                 type: "array",
+                items:{
+                  type: "object",
                 properties: {
                     name_org: { type: "string" },
                     BIN: { type: "string" },
                     id: { type: "integer" },
+                  }
                 }
             },
 
