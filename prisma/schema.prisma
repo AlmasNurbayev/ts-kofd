@@ -38,9 +38,9 @@ model transaction {
   offlineFiscalNumber String?
   systemDate DateTime? @db.Timestamptz
   operationDate DateTime? @db.Timestamptz 
-  type_operation Int
+  type Int
   subType Int?
-  sum_operation Decimal?
+  sum Decimal?
   availableSum Decimal?
   paymentTypes String?
   shift Int
@@ -49,7 +49,7 @@ model transaction {
   id_organization Int //foreign key
   kassa kassa @relation(fields: [id_kassa], references: [id]) //virtual
   id_kassa Int //foreign key
-  @@index(fields: [shift, id_kassa])
+  @@index(fields: [shift, id_kassa, operationDate])
 }
 
 model telegram_users {

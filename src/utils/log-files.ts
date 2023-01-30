@@ -19,3 +19,19 @@ export const logger = pino({
       ]
     }
   });
+
+  export async function writeLog(name: string, data: string, append = true, jsoned = true) {
+
+    if (jsoned) {
+      data = JSON.stringify(data);
+    } else {
+      data = String(data);
+    }
+  
+    if (append) {
+      await fs.appendFile('logs/' + name, data + '\n');
+    } else {
+      fs.writeFile('logs/' + name, data);
+    }
+  }
+  

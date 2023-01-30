@@ -20,6 +20,7 @@ export async function swaggerInit() {
             { name: 'user', description: 'User related end-points' },
             { name: 'kassa', description: 'Kassa related end-points' },
             { name: 'organization', description: 'Organization related end-points' },
+            { name: 'transaction', description: 'Transaction related end-points' },
           ],          
         },
         exposeRoute: true,

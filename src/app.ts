@@ -15,6 +15,7 @@ import { kassaShemas } from "./modules/kassa/kassa.schema";
 import { orgShemas } from "./modules/organization/organization.schema";
 import { orgRoutes } from "./modules/organization/organization.routes";
 import dotenv from 'dotenv';
+import transactionRoutes from "./modules/transaction/transaction.routes";
 
 dotenv.config();
 export const port = Number(process.env.PORT_EXPRESS);
@@ -51,6 +52,7 @@ async function main() {
   server.register(userRoutes, { prefix: 'api/user' });
   server.register(kassaRoutes, { prefix: 'api/kassa' });
   server.register(orgRoutes, { prefix: 'api/org' });
+  server.register(transactionRoutes, { prefix: 'api/transaction' });
 
   try {
     await server.listen({ port })
