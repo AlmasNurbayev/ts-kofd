@@ -17,6 +17,7 @@ import { orgRoutes } from "./modules/organization/organization.routes";
 import dotenv from 'dotenv';
 import {transactionRoutes} from "./modules/transaction/transaction.routes";
 import { transactionShemas } from "./modules/transaction/transaction.schema";
+import prismaI from "./utils/prisma";
 
 dotenv.config();
 export const port = Number(process.env.PORT_EXPRESS);
@@ -58,6 +59,17 @@ async function main() {
   server.register(orgRoutes, { prefix: 'api/org' });
   server.register(transactionRoutes, { prefix: 'api/transaction' });
 
+  // чистим таблицу токенов, если там больше 200 записей
+  try {
+    const count: number = await prismaI.token_kofd.count();
+    if (count > 200) { 
+      await prismaI.token_kofd.deleteMany();
+    }
+  }
+    catch (err) {
+      logger.error('app.ts - prisma token delete ' + JSON.stringify(err).slice(500));  
+  }
+
   try {
     await server.listen({ port })
     logger.info('app.ts - starting ' + port);
@@ -68,6 +80,8 @@ async function main() {
     process.exit(1);
   }
 }
+
+
 
 main();
 

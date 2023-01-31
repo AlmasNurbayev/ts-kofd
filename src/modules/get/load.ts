@@ -168,24 +168,24 @@ export async function load(period: string | { dateStart: Date, dateEnd: Date }, 
       listOrg.forEach((elementOrg) => {
         if (elementKassa.BIN === elementOrg.BIN) {
           elementKassa['jwt'] = elementOrg.jwt;
-          arrGet.push(getTransaction(elementKassa.jwt, elementKassa.knumber, elementKassa.id, elementKassa.name_kassa, elementKassa.id_organization, period));
+          arrGet.push(getTransaction(elementKassa.jwt, elementKassa.knumber, elementKassa.id, elementKassa.name_kassa, elementKassa.id_organization, elementKassa.BIN, period));
         }
       });
     });
     let res2 = await Promise.all(arrGet);
+    writeLog(`rows.txt`, JSON.stringify(res2), false);
     res2.forEach((element3: raw_data) => {
       //console.log(element3.name_kassa + ", " + element3.data.length + ", " + element3.id_kassa + ",  " + element3.id_organization);
-      writeOperation(element3, element3.id_kassa, element3.id_organization);
       writeLog(`response.txt`, JSON.stringify(element3), false);
-      getSummary(tableSumAll, getStat(element3, element3.id_kassa, element3.knumber, element3.name_kassa, element3.id_organization, element3.dateStart, element3.dateEnd));
+      writeOperation(element3, element3.id_kassa, element3.id_organization);
+      getSummary(tableSumAll, getStat(element3, element3.id_kassa, element3.knumber, element3.name_kassa, element3.id_organization, element3.BIN, element3.dateStart, element3.dateEnd));
     });
     //fs.appendFile("get/response.txt", JSON.stringify(res) + "\n", (error2) => { });
     writeLog(`tableSumAll.txt`, JSON.stringify(tableSumAll), false);
-    writeLog(`rows.txt`, JSON.stringify(res2), false);
     console.log('get-load.ts ended load with mode: ', period);
     return {
-      'table': tableSumAll,
-      'rows': res2
+      table: tableSumAll,
+      list: parseResRows(res2)
     };
   }
   catch (err) {
@@ -195,42 +195,68 @@ export async function load(period: string | { dateStart: Date, dateEnd: Date }, 
   }
 }
 
+export function parseResRows(rows: Array<raw_data>) {
+  logger.info('get-load - parseResRows starting');
+  //console.log(JSON.stringify(rows));
 
+  const list: listT[] = [];
+  if (rows.length == 0) {
+    return list;
+  }
 
-//   try {
-//     logger.info('load - starting of build array with JWT'); 
-//     let res = await Promise.all(arrJWT);
-//     //console.log(JSON.stringify(res));
+  rows.forEach((kassa) => {
 
+    let kassa_array = kassa.data.filter((e) => { //фильтрация по типу операций
+      return e.type == 1;
+    });
+    kassa_array = kassa.data.filter((e) => {
+      return e.subType == 2 || e.subType == 3;
+    });
 
-//   }
-//   catch (err) {
-//     console.log(err.stack);
-//     logger.error(JSON.stringify(err.stack), 'getTransaction - promise get jwt and transactions');
-//     throw new Error(err);
-//   }
+    kassa_array.forEach((element) => {
+      //console.log(JSON.stringify(element));
+      let elementTypeOper, elementSum;
+      if (element.type == 1 && element.subType == 3) {
+        elementTypeOper = 'возврат';
+        elementSum = -1 * Number(element.sum);
+      }
+      if (element.type == 1 && element.subType == 2) {
+        elementTypeOper = 'продажа';
+        elementSum = element.sum;
+      }
+      let elementTypePay;
+      //if (typeof (element.paymentTypes) == 'object') {
+      if (element.paymentTypes == '0,1') {
+        elementTypePay = 'смешанно';
+      } else if (element.paymentTypes == '0') {
+        elementTypePay = 'кеш';
+      } else if (element.paymentTypes == '1') {
+        elementTypePay = 'карта';
+      }
 
-//   try {
-//     logger.info('load - starting GET query receive transaction'); 
-//     let res2 = await Promise.all(arrGet);
-//     res2.forEach((element3) => {
-//       //console.log(element3.name_kassa + ", " + element3.data.length + ", " + element3.id_kassa + ",  " + element3.id_organization);
-//       writeOperation(element3, element3.id_kassa, element3.name_kassa, element3.id_organization);
-//       writeLog(`response.txt`, element3, false);
-//       getSummary( getStat(element3, element3.id_kassa, element3.name_kassa, element3.id_organization, element3.dateStart, element3.dateEnd));
-//     });
-//     //fs.appendFile("get/response.txt", JSON.stringify(res) + "\n", (error2) => { });
-//     writeLog(`summary.txt`,  false);
-//     //console.log(;
-//     return {
-//       'table': 
-//       'rows': res2};
-//   } catch (err) {
-//     logger.error(err.stack, 'getTransaction - promise get summary');
-//     console.log(err.stack);
-//     throw new Error(err);
-//   }
-
+      //}
+      // console.log(String(element.operationDate).slice(0,10));
+      // console.log(controlDate);
+      //if (String(element.operationDate).slice(0,10) == controlDate) { // сверка даты операции и переданной даты
+      list.push({
+        knumber: kassa.knumber,
+        id_organization: kassa.id_organization,
+        name_kassa: kassa.name_kassa,
+        id_kassa: kassa.id_kassa,
+        BIN: kassa.BIN,
+        typeOper: String(elementTypeOper),
+        sum: elementSum,
+        typePay: elementTypePay,
+        id: element.id,
+        date: element.operationDate,
+        shift: element.shift
+        //check: {}
+      });
+    })
+  });
+  logger.info('get-load - parseResRows ending');
+  return list;
+}
 
 
 // insert to db from recieved transaction 
@@ -272,7 +298,7 @@ async function writeOperation(res: raw_data, id_kassa: number, id_organization: 
 }
 
 // count statistics from recieved transaction 
-function getStat(res: raw_data, id_kassa: number, knumber: string, name_kassa: string, id_organization: number, dateStart: string, dateEnd: string) {
+function getStat(res: raw_data, id_kassa: number, knumber: string, name_kassa: string, id_organization: number, BIN: string, dateStart: string, dateEnd: string) {
 
   const tableSum: sumSale = {
     sumSale: 0,
@@ -294,6 +320,7 @@ function getStat(res: raw_data, id_kassa: number, knumber: string, name_kassa: s
     id_kassa: id_kassa,
     name_kassa: name_kassa,
     id_organization: id_organization,
+    BIN: BIN,
     dateStart: dateStart,
     dateEnd: dateEnd,
     errors: 0
@@ -401,6 +428,7 @@ export type raw_row = {
   shift: number,
   id_organization?: number, // not present in raw, but needed in DB Array
   id_kassa?: number,
+  name_kassa?: string,
 
   //uploadDate  : Date,
 };
@@ -408,6 +436,7 @@ export type raw_row = {
 export type raw_data = {
   data: Array<raw_row>,
   id_organization: number,
+  BIN: string,
   id_kassa: number,
   name_kassa: string,
   knumber: string;
@@ -438,8 +467,25 @@ export type sumSale = {
   knumber?: string,
   id_kassa?: number,
   id_organization?: number,
+  BIN?: string,
   errors: number
 }
+
+export type listT = {
+  token?: string,
+  knumber: string,
+  id_kassa: number,
+  name_kassa: string,
+  BIN: string,
+  id_organization: number,
+  //name_org: string,
+  typeOper: string,
+  sum?: number,
+  typePay?: string,
+  id: string,
+  date: Date,
+  shift: number
+};
 
 
 (async () => {
@@ -448,7 +494,7 @@ export type sumSale = {
   //   dateStart: new Date(2022, 11, 1),
   //   dateEnd: new Date(2022, 11, 31)
   // }));
-  // await load('прошлая неделя');
+   //await load('прошлая неделя');
 })();
 
 //, '800727301256'

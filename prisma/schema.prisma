@@ -65,3 +65,14 @@ model user {
   salt String?
   role String?
 }
+
+model token_kofd {
+  id Int @id @default(autoincrement())
+  BIN String
+  token String
+  exp Int
+  nbf Int
+  working Boolean
+
+  @@index(fields: [exp, BIN])
+}

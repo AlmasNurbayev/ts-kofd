@@ -5,6 +5,9 @@ import moment from 'moment';
 //const { Client } = require('pg');
 import { writeLog, logger } from '../../utils/log-files';
 import dotenv from "dotenv";
+import prismaI from "../../utils/prisma";
+import { createDecoder } from 'fast-jwt';
+
 dotenv.config();
 
 const agent = new https.Agent({
@@ -41,6 +44,31 @@ export async function getJWT(iin: string, pass: string) {
     timeout: 10000
   };
 
+  // поиск токена в базе
+  try {
+    const nowTimeStamp = Math.round(Date.now() / 1000) + 10; // округляем и прибавляем 10 секунд, чтобы дать время на все остальное
+    //console.log('now ts', nowTimeStamp);
+    logger.info('api - getJWT, founding token for ' + iin + ' with timstamp > ' + nowTimeStamp);
+    const res_token = await prismaI.token_kofd.findFirst({
+      where:
+      {
+        AND: [
+          { BIN: iin },
+          { exp: { gte: nowTimeStamp } }
+        ]
+      }
+    });
+
+    if (res_token != null) { // если нашли подходящий и не просроченный токен в БД, берем его и дальше не делаем запросы в КОФД
+      //console.log('in db', res_token.exp);
+      logger.info('api - getJWT, found JWT in DB exp: ' + res_token.exp + ' token: ' + res_token.token + ' for ' + iin);
+      return res_token.token;
+    }
+  } catch (err) {
+    logger.error('api - getJWT, error for found JWT in DB ' + JSON.stringify(err).slice(500));
+  }
+
+
 
   //console.log("1");
 
@@ -50,13 +78,30 @@ export async function getJWT(iin: string, pass: string) {
     //console.log(typeof response);
     writeLog('response-post.txt', response.data, false);
     if (response.data.data == null) {
-      logger.error('getJWT ' + response.data);
+      logger.error('api-getJWT ' + response.data);
       return;
     }
-    logger.info('api - ending getJWT ' + response.data.data.jwt);
+    logger.info('api-getJWT - generate new token ' + response.data.data.jwt + ' for ' + iin);
+
+
+    // декодируем полученный токен и записываем его в БД, для возможного повторного использования
+    const decodeComplete = createDecoder({ complete: true })
+    const res = decodeComplete(response.data.data.jwt).payload;
+    if ((res.exp) || (res.nbf)) {
+      const rec = await prismaI.token_kofd.create({
+        data: {
+          BIN: iin,
+          token: response.data.data.jwt,
+          working: true,
+          exp: res.exp,
+          nbf: res.nbf,
+        }
+      })
+    }
+
     return response.data.data.jwt;
   } catch (e) {
-    logger.error('getJWT ' + JSON.stringify(e));
+    logger.error('api-getJWT ' + JSON.stringify(e).slice(500));
     //throw new Error(e);
   }
 }
@@ -68,7 +113,7 @@ export async function getJWT(iin: string, pass: string) {
  * @param {*} kassa_id
  * @returns {Promise<string|Error>}
  */
-export async function getTransaction(jwt: string, knumber: string, id_kassa: number, name_kassa: string, id_organization: number, dateMode: string | { dateStart: Date, dateEnd: Date }) {
+export async function getTransaction(jwt: string, knumber: string, id_kassa: number, name_kassa: string, id_organization: number, BIN: string, dateMode: string | { dateStart: Date, dateEnd: Date }) {
   logger.info('api - starting getTransaction: ' + JSON.stringify({ knumber, id_kassa, name_kassa }) + ' ' + dateMode);
   const token = "Bearer " + jwt;
   //await writeLog(`jwt.txt`, String(token));
@@ -107,6 +152,7 @@ export async function getTransaction(jwt: string, knumber: string, id_kassa: num
       res.data['id_kassa'] = id_kassa;
       res.data['name_kassa'] = name_kassa;
       res.data['id_organization'] = id_organization;
+      res.data['BIN'] = BIN;
       res.data['knumber'] = knumber;
       res.data['dateStart'] = dateStart;
       res.data['dateEnd'] = dateEnd;
@@ -115,7 +161,7 @@ export async function getTransaction(jwt: string, knumber: string, id_kassa: num
       logger.info('api - ending getTransaction');
       return res.data;
     } catch (e) {
-      logger.error('getTransaction ' + JSON.stringify(e));
+      logger.error('getTransaction ' + String(e).slice(500));
       //throw new Error(e);
     }
   }
@@ -140,6 +186,7 @@ export async function getCheck(id: string, knumber: string, token: string) {
     httpsAgent: agent,
     timeout: 10000
   };
+
   try {
     const res = await axios(config);
     //console.log(res.data);
@@ -150,9 +197,9 @@ export async function getCheck(id: string, knumber: string, token: string) {
     logger.info('api - ending getCheck: ' + id + " - " + knumber);
     //console.log(JSON.stringify(res.data));
     return res.data;
-  } catch (e ) {
-    logger.error('getCheck ' + JSON.stringify(e));
-    console.log('getCheck ' + JSON.stringify(e).slice(300));
+  } catch (e) {
+    logger.error('getCheck ' + String(e).slice(0,500));
+    //console.log('getCheck ' + JSON.stringify(e).slice(300));
   }
 }
 
