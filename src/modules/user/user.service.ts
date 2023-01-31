@@ -8,7 +8,7 @@ import { putUserSchemaT } from "./user.schema";
 //const bcrypt = require('bcrypt');
 
 export async function createUser(body: Prisma.userCreateInput) {
-    console.log('service');
+    //console.log('service');
     logger.info('user-service-createUser - starting');
     const { email, name, password } = body;
     //console.log(email, name, password);
@@ -23,7 +23,7 @@ export async function createUser(body: Prisma.userCreateInput) {
             //console.log(data2);
 
             const user = await prismaI.user.create(data2);
-            logger.info('user-service-createUser - done');
+            logger.info('user-service-createUser - done ' + email);
             return user;
         }
         catch (err) {
@@ -37,7 +37,7 @@ export async function createUser(body: Prisma.userCreateInput) {
 }
 
 export async function getUsers() {
-    console.log('service');
+    //console.log('service');
     logger.info('user-service-getUsers - starting');
     try {
         const users = await prismaI.user.findMany();
@@ -52,7 +52,7 @@ export async function getUsers() {
 }
 
 export async function getUser(body: Prisma.userWhereUniqueInput) {
-    console.log('service');
+    //console.log('service');
     const { email } = body;
     logger.info('user-service-getUser - starting ' + JSON.stringify(body));
     //console.log(JSON.stringify(body));
@@ -62,7 +62,7 @@ export async function getUser(body: Prisma.userWhereUniqueInput) {
             const user = await prismaI.user.findUnique({
                 where: { email: email },
             });
-            logger.info('user-service-getUser - done');
+            logger.info('user-service-getUser - done ' + email);
             return user;
         }
 
@@ -74,7 +74,7 @@ export async function getUser(body: Prisma.userWhereUniqueInput) {
 }
 
 export async function putUser(body: Prisma.userUpdateInput) {
-    console.log('service');
+    //console.log('service');
     logger.info('user-service-putUser - starting');
     const { email, password, name } = body;
     //console.log(JSON.stringify(body));
@@ -85,7 +85,7 @@ export async function putUser(body: Prisma.userUpdateInput) {
             where: {email: email as string},
         });
         if (oldUser != null) {
-            console.log(oldUser);
+            //console.log(oldUser);
             let updBody = oldUser;
 
             if (password != oldUser.password) {
@@ -126,7 +126,7 @@ export async function deleteUser(body: Prisma.userWhereUniqueInput) {
             const user = await prismaI.user.delete({
                 where: { email: email },
             });
-            logger.info('user-service-deleteUser - done');
+            logger.info('user-service-deleteUser - done' + email);
             return user;
         }
     }

@@ -1,4 +1,4 @@
-console.log('Hello2');
+
 
 import fastify from "fastify";
 
@@ -15,11 +15,12 @@ import { kassaShemas } from "./modules/kassa/kassa.schema";
 import { orgShemas } from "./modules/organization/organization.schema";
 import { orgRoutes } from "./modules/organization/organization.routes";
 import dotenv from 'dotenv';
-import transactionRoutes from "./modules/transaction/transaction.routes";
+import {transactionRoutes} from "./modules/transaction/transaction.routes";
+import { transactionShemas } from "./modules/transaction/transaction.schema";
 
 dotenv.config();
 export const port = Number(process.env.PORT_EXPRESS);
-export const server = fastify({ logger: true });
+export const server = fastify({ logger: false });
 
 server.get('/check', async () => {
   return { status: 'ok' }
@@ -41,6 +42,9 @@ async function main() {
   orgShemas.forEach((schema) => {
     server.addSchema(schema);
   });
+  transactionShemas.forEach((schema) => {
+    server.addSchema(schema);
+  });
 
   // регистрация JWT
   server.register(fjwt, {
@@ -57,6 +61,7 @@ async function main() {
   try {
     await server.listen({ port })
     logger.info('app.ts - starting ' + port);
+    console.log('app.ts - starting '+ port);
   } catch (err) {
     logger.error('app.ts ' + err);
     server.log.error(err);
@@ -72,19 +77,25 @@ server.decorate("authenticateAdmin", async function (request: FastifyRequest, re
   try {
     const decoded = await request.jwtVerify() as { 'email': string };
     if (decoded.email) {
-      console.log(decoded.email);
+      //console.log(decoded.email);
       let user = await getUser({ 'email': decoded.email }); //получаем юзера по email
       if (user) {
         if (user.role as string != 'admin') { // проверяем роль юзера
           reply.code(403).send({ error: 'forbidden', message: 'is not admin' });
+        } {
+          console.log('authenticateAdmin - decode jwt ' + decoded.email);
+          logger.info('authenticateAdmin - decode jwt ' + decoded.email);
         }
       } else {
-        console.log('authenticate - user');
+        console.log('authenticateAdmin - decode jwt - not found user');
+        logger.error('authenticateAdmin - decode jwt - not found user');
         reply.send(new Error);
       }
     };
   } catch (err) {
-    console.log('authenticate - jwt');
+    console.log('authenticateAdmin - ' + err);
+    logger.error('authenticateAdmin - ' + err);
+
     reply.send(err);
   }
 })
@@ -96,16 +107,20 @@ server.decorate("authenticateWithBodyEmail", async function (request: FastifyReq
   try {
     const decoded = await request.jwtVerify() as { 'email': string };
     if (decoded.email) {
-      console.log(decoded.email);
+      
       if (body.email) {
         if (body.email != decoded.email) {
           console.log('authenticate - jwt');
           reply.code(403).send({ error: 'forbidden', message: 'request email not valid with token email' });
+        } else {
+          console.log('authenticateWithBodyEmail - decode jwt ' + decoded.email);
+          logger.info('authenticateWithBodyEmail - decode jwt ' + decoded.email);
         }
       }
     };
   } catch (err) {
-    console.log('authenticate - jwt');
+    console.log('authenticateWithBodyEmail - error');
+    logger.error('authenticateWithBodyEmail ' + err);
     reply.send(err);
   }
 })

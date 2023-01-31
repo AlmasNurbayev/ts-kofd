@@ -7,7 +7,7 @@ export async function postOrgHandler(
     request: FastifyRequest,
     reply: FastifyReply) {
     const body = request.body as postOrgSchemaT;
-
+    console.log('request organzation-POST', JSON.stringify(request.body));    
     //fs.writeFile('logs/body.txt', body.toString(), err =>{});
 
     logger.info('Org - controller - POST request ' + JSON.stringify(request.headers).slice(0, 300));
@@ -47,7 +47,7 @@ export async function getOrgHandler(
     //fs.writeFile('logs/body.txt', body.toString(), err =>{});
 
     logger.info('Org - controller - GET request ' + JSON.stringify(request.headers).slice(0, 300));
-    
+    console.log('request organzation-GET', JSON.stringify(request.headers));    
 
     try {
         const body = await getOrg();
@@ -73,7 +73,7 @@ export async function putOrgHandler(
     request: FastifyRequest,
     reply: FastifyReply) {
     const body = request.body as putOrgSchemaT;
-
+    console.log('request organzation-PUT', JSON.stringify(request.body));        
     //fs.writeFile('logs/body.txt', body.toString(), err =>{});
 
     logger.info('Org - controller - PUT request ' + JSON.stringify(request.headers).slice(0, 300));

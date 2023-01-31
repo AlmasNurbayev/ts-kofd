@@ -12,8 +12,8 @@ import { server } from "../../../src/app";
 export async function createUserController(
     request: FastifyRequest,
     reply: FastifyReply) {
-    console.log('controller');
-
+    //console.log('controller');
+    console.log('request USER-POST', JSON.stringify(request.body));
     const body = request.body as createUserSchemaT;
 
     //fs.writeFile('logs/body.txt', body.toString(), err =>{});
@@ -54,8 +54,9 @@ export async function createUserController(
 export async function getUsersController(
     request: FastifyRequest,
     reply: FastifyReply) {
-    console.log('controller');
+    //console.log('controller');
     logger.info('user - controller - GET users request ' + JSON.stringify(request.headers).slice(0, 300));
+    console.log('request USER-GET-S', JSON.stringify(request.headers));
 
     try {
         const body = await getUsers();
@@ -76,9 +77,10 @@ export async function getUsersController(
 export async function getUserController(
     request: FastifyRequest,
     reply: FastifyReply) {
-    console.log('controller');
+    //console.log('controller');
     logger.info('user - controller - GET user request ' + JSON.stringify(request.headers).slice(0, 300));
-    console.log('request', JSON.stringify(request.query));
+    console.log('request USER-GET', JSON.stringify(request.query));
+    //console.log('request', JSON.stringify(request.query));
 
     const { email } = request.query as getUserSchemaT;
     try {
@@ -102,6 +104,7 @@ export async function loginUserController(
     const body = request.body as loginUserSchemaT;
     logger.info('user.controller - login POST headers ' + JSON.stringify(request.headers).slice(0, 300));
     logger.info('user.controller - login POST body ' + JSON.stringify(request.body).slice(0, 300));
+    console.log('request USER-LOGIN', JSON.stringify(request.body));
 
     if (!request.validateInput(body, loginUserBody)) {
         logger.error('user - controller' + ' 400 - not valid data');
@@ -125,6 +128,7 @@ export async function loginUserController(
         if (correctPassword) {
             // generate JWT
             const accessToken = server.jwt.sign({ id: user.id, email: user.email }, { expiresIn: process.env.JWT_EXP_MS }); // генерируем токен и передаем клиенту
+            logger.info('user-service-loginUser ' + ' for user' + user.email + ' post token ' + accessToken);
             reply.code(200).send({ email: user.email, accessToken: accessToken });
         } else {
             reply.code(401).send({ error: 'Unauthorized', message: 'incorrect email / password' }); // отказ если хеш не подходит
@@ -143,6 +147,7 @@ export async function putUserController(
 
     logger.info('user.controller - PUT headers ' + JSON.stringify(request.headers).slice(0, 300));
     logger.info('user.controller - PUT body ' + JSON.stringify(request.body).slice(0, 300));
+    console.log('request USER-PUT', JSON.stringify(request.query));
 
     const body = request.body as putUserSchemaT;
 
@@ -169,9 +174,9 @@ export async function putUserController(
 export async function deleteUserController(
     request: FastifyRequest,
     reply: FastifyReply) {
-    console.log('controller');
+    //console.log('controller');
     logger.info('user - controller - DELETE user request ' + JSON.stringify(request.headers).slice(0, 300));
-    console.log('request', JSON.stringify(request.query));
+    console.log('request USER-DELETE', JSON.stringify(request.query));
 
     const { email } = request.query as getUserSchemaT;
     try {

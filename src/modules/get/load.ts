@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 //import { getJWT, getTransaction, getQuery } from './api';
 import prismaI from '../../utils/prisma';
-import { Prisma } from '@prisma/client';
+import { organization, Prisma, PrismaClient } from '@prisma/client';
 import { postKassaSchemaT } from '../kassa/kassa.schema';
 import { getJWT, getTransaction } from './api';
 //const { logger.error, writeLog, logger, isFileExist } = require('../logs/logs-utils.js');
@@ -12,22 +12,9 @@ import { getJWT, getTransaction } from './api';
 const count = 1000; // count of transaction get from kofd
 dotenv.config();
 
-// clear all temporary files
-// const name1 = "../logs/response-post.txt";
-// if (isFileExist(name1)) {
-//   //fs.unlink(name1, (err) => {logger.error(err.stack, 'load - unlink')});
-// } 
-// const name2 = "../logs/response.txt";
-// if (isFileExist(name2)) {
-//   //fs.unlink(name2, (err) => {logger.error(err.stack, 'load - unlink')});
-// } 
-
-//fs.unlink("../logs/jwt.txt", (err) => {logger.error(err.stack, 'load - unlink') });
-//fs.unlink("../logs/response-get.txt", (err) => {logger.error(err.stack, 'load - unlink') });
-
 
 // get list of org & kassa form db 
-async function load(period: string | { dateStart: Date, dateEnd: Date }) {
+export async function load(period: string | { dateStart: Date, dateEnd: Date }, knumber?: Array<string>, BIN?: Array<string>) {
 
   logger.info('load - starting with mode ' + period);
 
@@ -60,59 +47,103 @@ async function load(period: string | { dateStart: Date, dateEnd: Date }) {
     jwt: string
   }[] = [];
 
-  let temp2 = await prismaI.organization.findMany();
-  console.table(listOrg);
+  try {
+    let temp2: Array<{ id: number, BIN: string, name_org: string, jwt?: string }> = []
+    if (typeof (BIN) == 'object') {
+      temp2 = await prismaI.organization.findMany({
+        where: { BIN: { in: BIN } }
+      });
+      // перекладываем из массива Призмы в наш массив
+    } else {
+      temp2 = await prismaI.organization.findMany();
+    }
+    temp2.forEach(element => {
+      listOrg.push({
+        id: element.id,
+        BIN: element.BIN,
+        name_org: element.name_org,
+        jwt: ''
+      });
+    })
 
-  // перекладываем из массива Призмы в наш массив
-  temp2.forEach(element => {
-    listOrg.push({
-      id: element.id,
-      BIN: element.BIN,
-      name_org: element.name_org,
-      jwt: ''
-    });
-  })
+  }
+  catch (err) {
+    console.log(err);
+    logger.error('get-load-load - get organizations ' + err);
+  }
 
-  const listKassa: {
+  //return;
+
+
+
+  type listKassaT = {
     snumber: string,
     knumber: string,
     znumber: string,
     name_kassa: string,
     id_organization: number,
     id: number,
-    organization?: { BIN: string, name_org: string },
+    organization: { BIN: string, name_org: string },
     BIN: string,
     name_org: string,
-    jwt: string
-  }[] = [];
+    jwt?: string
+  };
 
-  let temp1 = await prismaI.kassa.findMany({
-    include: {
-      organization: {
-        select: {
-          BIN: true,
-          name_org: true,
+  let listKassa: Array<listKassaT> = [];
+
+
+  //let temp1 : prismaI.kassa. .CreateManyArgs.data;
+  try {
+    let temp1 = [];
+    if (typeof (knumber) == 'object') {
+      temp1 = await prismaI.kassa.findMany({
+        include: {
+          organization: {
+            select: {
+              BIN: true,
+              name_org: true,
+            }
+          },
+        },
+        where: { knumber: { in: knumber } }
+      }) as Array<listKassaT>;
+    } else {
+      temp1 = await prismaI.kassa.findMany({
+        include: {
+          organization: {
+            select: {
+              BIN: true,
+              name_org: true,
+            }
+          },
         }
-      },
+      }) as Array<listKassaT>;
     }
-  });
+    // перекладываем из массива Призмы в наш массив
+    temp1.forEach(element => {
+      listKassa.push({
+        id: element.id,
+        snumber: element.snumber,
+        knumber: element.knumber,
+        znumber: element.znumber,
+        name_kassa: element.name_kassa,
+        id_organization: element.id_organization,
+        organization: element.organization,
+        BIN: element.organization.BIN,
+        name_org: element.organization.name_org,
+        jwt: ''
+      });
+    })
+  }
+  catch (err) {
+    console.log(err);
+    logger.error('get-load-load - get kassa ' + err);
+  }
 
-  // перекладываем из массива Призмы в наш массив
-  temp1.forEach(element => {
-    listKassa.push({
-      id: element.id,
-      snumber: element.snumber,
-      knumber: element.knumber,
-      znumber: element.znumber,
-      name_kassa: element.name_kassa,
-      id_organization: element.id_organization,
-      BIN: element.organization.BIN,
-      name_org: element.organization.name_org,
-      jwt: ''
-    });
-  })
 
-  console.table(listKassa);
+
+  //console.table(listOrg);
+  //console.table(listKassa);
 
   let arrJWT: Promise<string>[] = [];
   let arrGet: Promise<raw_data>[] = [];
@@ -149,8 +180,9 @@ async function load(period: string | { dateStart: Date, dateEnd: Date }) {
       getSummary(tableSumAll, getStat(element3, element3.id_kassa, element3.knumber, element3.name_kassa, element3.id_organization, element3.dateStart, element3.dateEnd));
     });
     //fs.appendFile("get/response.txt", JSON.stringify(res) + "\n", (error2) => { });
-    writeLog(`summary.txt`, JSON.stringify(tableSumAll), false);
-    //console.log(;
+    writeLog(`tableSumAll.txt`, JSON.stringify(tableSumAll), false);
+    writeLog(`rows.txt`, JSON.stringify(res2), false);
+    console.log('get-load.ts ended load with mode: ', period);
     return {
       'table': tableSumAll,
       'rows': res2
@@ -308,6 +340,7 @@ function getStat(res: raw_data, id_kassa: number, knumber: string, name_kassa: s
     tableSum.sumAllCard = tableSum.sumSaleCard - tableSum.sumReturnCard;
     tableSum.sumAllCash = tableSum.sumSaleCash - tableSum.sumReturnCash;
     tableSum.sumAllMixed = tableSum.sumSaleMixed - tableSum.sumReturnMixed;
+    writeLog(`stat-${knumber}.txt`, JSON.stringify(tableSum), false);
     return tableSum;
     //console.log('Итоги по кассе ' + name_kassa + ':');
     //console.log(tableSum);
@@ -322,7 +355,7 @@ function getStat(res: raw_data, id_kassa: number, knumber: string, name_kassa: s
 }
 
 function getSummary(tableSumAll: sumSale, obj: sumSale) {
-
+  
   logger.info(`load - starting get summary for ${JSON.stringify(obj.name_kassa)}`);
 
   try {
@@ -342,10 +375,10 @@ function getSummary(tableSumAll: sumSale, obj: sumSale) {
     tableSumAll.cashEject += obj.cashEject;
     tableSumAll.dateStart = obj.dateStart;
     tableSumAll.dateEnd = obj.dateEnd;
-    if (typeof(tableSumAll.obj) == 'object') {
+    if (typeof (tableSumAll.obj) == 'object') {
       tableSumAll.obj.push(obj);
     }
-    
+
   }
   catch (err) {
     logger.error('getSummary ' + err);
@@ -353,15 +386,6 @@ function getSummary(tableSumAll: sumSale, obj: sumSale) {
     //throw new Error(err);
   }
 }
-
-(async () => {
- console.log(await load('прошлый день'));
-  // await load({
-  //   dateStart: new Date(2023, 0, 28),
-  //   dateEnd: new Date(2023, 0, 30)
-  // });
- // await load('прошлая неделя');
-})();
 
 export type raw_row = {
   id: string,
@@ -416,3 +440,15 @@ export type sumSale = {
   id_organization?: number,
   errors: number
 }
+
+
+(async () => {
+  //console.log(await load('прошлый '));
+  // console.log(await load({
+  //   dateStart: new Date(2022, 11, 1),
+  //   dateEnd: new Date(2022, 11, 31)
+  // }));
+  // await load('прошлая неделя');
+})();
+
+//, '800727301256'

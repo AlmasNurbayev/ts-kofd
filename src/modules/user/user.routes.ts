@@ -6,7 +6,7 @@ import { getUserSchema, getUserBody } from "./user.schema";
 
 
 async function userRoutes(server: FastifyInstance ) {
-  console.log('start route');
+
   logger.info('user - route - start');
   try {
     server.post('/', createUserSchema, createUserController);
@@ -63,7 +63,7 @@ async function userRoutes(server: FastifyInstance ) {
   };
 
 
-  console.log('end route');
+  
   logger.info('user - route - end');
 }
 

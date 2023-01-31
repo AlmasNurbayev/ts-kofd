@@ -20,7 +20,7 @@ export const logger = pino({
     }
   });
 
-  export async function writeLog(name: string, data: string, append = true, jsoned = true) {
+  export async function writeLog(name: string, data: string, append = true, jsoned = false) {
 
     if (jsoned) {
       data = JSON.stringify(data);

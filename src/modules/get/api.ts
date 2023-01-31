@@ -56,7 +56,7 @@ export async function getJWT(iin: string, pass: string) {
     logger.info('api - ending getJWT ' + response.data.data.jwt);
     return response.data.data.jwt;
   } catch (e) {
-    logger.error('getJWT ' + e);
+    logger.error('getJWT ' + JSON.stringify(e));
     //throw new Error(e);
   }
 }
@@ -101,7 +101,7 @@ export async function getTransaction(jwt: string, knumber: string, id_kassa: num
       const res = await axios(config);
       //console.log(res.data);
       if (res.data.error) {
-        await logger.error(res.data.error, 'getData');
+        await logger.error('getData ' + res.data.error);
         return;
       }
       res.data['id_kassa'] = id_kassa;
@@ -111,11 +111,11 @@ export async function getTransaction(jwt: string, knumber: string, id_kassa: num
       res.data['dateStart'] = dateStart;
       res.data['dateEnd'] = dateEnd;
       res.data['token'] = token;
-      await writeLog(`response-${knumber}.txt`, res.data, false);
+      await writeLog(`response-${knumber}.txt`, JSON.stringify(res.data), false);
       logger.info('api - ending getTransaction');
       return res.data;
     } catch (e) {
-      await logger.error(e, 'getTransaction');
+      logger.error('getTransaction ' + JSON.stringify(e));
       //throw new Error(e);
     }
   }
@@ -144,15 +144,15 @@ export async function getCheck(id: string, knumber: string, token: string) {
     const res = await axios(config);
     //console.log(res.data);
     if (res.data.error) {
-      await logger.error(res.data.error, 'getCheck');
+      logger.error('getCheck ' + res.data.error);
       return;
     }
     logger.info('api - ending getCheck: ' + id + " - " + knumber);
     //console.log(JSON.stringify(res.data));
     return res.data;
-  } catch (e) {
-    await logger.error(e, 'getCheck');
-    console.log(e)
+  } catch (e ) {
+    logger.error('getCheck ' + JSON.stringify(e));
+    console.log('getCheck ' + JSON.stringify(e).slice(300));
   }
 }
 

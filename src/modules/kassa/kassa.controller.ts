@@ -10,6 +10,7 @@ export async function postKassaHandler(
     request: FastifyRequest,
     reply: FastifyReply) {
     const body = request.body as postKassaSchemaT;
+    console.log('request kassa-POST', JSON.stringify(request.body));
 
     //fs.writeFile('logs/body.txt', body.toString(), err =>{});
 
@@ -49,7 +50,7 @@ export async function getKassaHandler(
     const body = request.query as postKassaSchemaT;
 
     //fs.writeFile('logs/body.txt', body.toString(), err =>{});
-
+    console.log('request kassa-GET', JSON.stringify(request.query));
     logger.info('kassa - controller - GET request ' + JSON.stringify(request.headers).slice(0, 300));
     //logger.info('kassa - controller - GET body ' + JSON.stringify(request.body).slice(0, 300));
 
@@ -76,7 +77,8 @@ export async function putKassaHandler(
     reply: FastifyReply) {
         logger.info('user.controller - PUT headers ' + JSON.stringify(request.headers).slice(0, 300));
         logger.info('user.controller - PUT body ' + JSON.stringify(request.body).slice(0, 300));
-    
+        console.log('request kassa-PUT', JSON.stringify(request.body));
+
         const body = request.body as postKassaSchemaT;
     
         if (!body.id) {

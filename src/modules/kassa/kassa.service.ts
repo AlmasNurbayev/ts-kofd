@@ -24,12 +24,11 @@ export async function postKassa(body: Prisma.kassaCreateInput) {
 }
 
 export async function getKassa(body: Prisma.kassaWhereInput) {
-    console.log('service');
+    //console.log('service');
     logger.info('kassa-service-get - starting');
     // {znumber, knumber, snumber, id, id_organization} = body;
     // let filter;
     // body.forEach(element => {});
-    console.log('body', JSON.stringify(body).replace(/['"]+/g, ''));
         
 
     try {
@@ -37,7 +36,7 @@ export async function getKassa(body: Prisma.kassaWhereInput) {
             where: body
         });
         logger.info('kassa-service-get - done');
-        console.log('kassa', kassa)
+        //console.log('kassa', kassa)
         return kassa;
     }
     catch (err) {
